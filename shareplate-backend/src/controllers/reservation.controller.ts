@@ -20,12 +20,11 @@ import {
 import {Reservation} from '../models';
 import {ReservationRepository} from '../repositories';
 
-export class ReservationControllerController {
+export class ReservationController {
   constructor(
     @repository(ReservationRepository)
     public reservationRepository: ReservationRepository,
-  ) {
-  }
+  ) {}
 
   @post('/reservations')
   @response(200, {
@@ -43,7 +42,7 @@ export class ReservationControllerController {
         },
       },
     })
-      reservation: Omit<Reservation, 'id'>,
+    reservation: Omit<Reservation, 'id'>,
   ): Promise<Reservation> {
     return this.reservationRepository.create(reservation);
   }
@@ -90,7 +89,7 @@ export class ReservationControllerController {
         },
       },
     })
-      reservation: Reservation,
+    reservation: Reservation,
     @param.where(Reservation) where?: Where<Reservation>,
   ): Promise<Count> {
     return this.reservationRepository.updateAll(reservation, where);
@@ -107,7 +106,8 @@ export class ReservationControllerController {
   })
   async findById(
     @param.path.number('id') id: number,
-    @param.filter(Reservation, {exclude: 'where'}) filter?: FilterExcludingWhere<Reservation>,
+    @param.filter(Reservation, {exclude: 'where'})
+    filter?: FilterExcludingWhere<Reservation>,
   ): Promise<Reservation> {
     return this.reservationRepository.findById(id, filter);
   }
@@ -125,7 +125,7 @@ export class ReservationControllerController {
         },
       },
     })
-      reservation: Reservation,
+    reservation: Reservation,
   ): Promise<void> {
     await this.reservationRepository.updateById(id, reservation);
   }

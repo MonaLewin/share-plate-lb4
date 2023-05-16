@@ -1,4 +1,5 @@
 import {ShareplateBackendApplication} from './application';
+import {NotificationRequest} from './models';
 
 export async function migrate(args: string[]) {
   const existingSchema = args.includes('--rebuild') ? 'drop' : 'alter';
@@ -6,7 +7,12 @@ export async function migrate(args: string[]) {
 
   const app = new ShareplateBackendApplication();
   await app.boot();
-  await app.migrateSchema({existingSchema});
+  await app.migrateSchema({
+    existingSchema,
+    datasource: 'db',
+
+    // models: ['User', 'FoodOffer', 'Reservation', 'DeviceToken', 'NotificationRequest'],
+  });
 
   // Connectors usually keep a pool of opened connections,
   // this keeps the process running even after all work is done.

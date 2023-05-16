@@ -20,7 +20,7 @@ import {
 import {FoodOffer} from '../models';
 import {FoodOfferRepository} from '../repositories';
 
-export class FoodOfferControllerController {
+export class FoodOfferController {
   constructor(
     @repository(FoodOfferRepository)
     public foodOfferRepository: FoodOfferRepository,

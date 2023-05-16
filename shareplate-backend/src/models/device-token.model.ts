@@ -1,27 +1,29 @@
-import {Entity, model, property} from "@loopback/repository";
+import {Entity, model, property} from '@loopback/repository';
 
-@model()
+@model({
+  datasource: 'db'
+  })
 export class DeviceToken extends Entity {
-    @property({
-        type: 'number',
-        id: true,
-        generated: true,
-    })
-    id?: number;
+  @property({
+    type: 'number',
+    id: true,
+    generated: true,
+  })
+  id?: number;
 
-    @property({
-        type: 'string',
-        required: true,
-    })
-    deviceToken: string
+  @property({
+    type: 'string',
+    required: true,
+  })
+  deviceToken: string;
 
-    constructor(data?: Partial<DeviceToken>) {
-        super(data);
-    }
+  constructor(data?: Partial<DeviceToken>) {
+    super(data);
+  }
 }
 
 export interface DeviceTokenRelations {
-    //describe navigational properties here
+  //describe navigational properties here
 }
 
-export  type DeviceTokenWithRelations = DeviceToken & DeviceTokenRelations;
+export type DeviceTokenWithRelations = DeviceToken & DeviceTokenRelations;

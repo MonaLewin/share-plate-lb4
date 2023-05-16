@@ -10,7 +10,15 @@ import {ServiceMixin} from '@loopback/service-proxy';
 import path from 'path';
 import {MySequence} from './sequence';
 import apn from 'apn';
-import {ApnProvider} from "./apn-provider";
+import {ApnProvider} from './apn-provider';
+
+import {AuthenticationComponent} from '@loopback/authentication';
+import {
+  JWTAuthenticationComponent,
+  //SECURITY_SCHEME_SPEC,
+  UserServiceBindings,
+} from '@loopback/authentication-jwt';
+import {DbDatasource} from './datasources';
 
 export {ApplicationConfig};
 
@@ -48,5 +56,10 @@ export class ShareplateBackendApplication extends BootMixin(
         nested: true,
       },
     };
+    this.component(AuthenticationComponent);
+    // Mount jwt component
+    this.component(JWTAuthenticationComponent);
+    // Bind datasource
+    this.dataSource(DbDatasource, UserServiceBindings.DATASOURCE_NAME);
   }
 }

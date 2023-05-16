@@ -1,19 +1,25 @@
 import {Entity, model, property} from '@loopback/repository';
 
-@model()
+@model({
+  datasource: 'db'
+})
 export class User extends Entity {
   @property({
     type: 'number',
     id: true,
     generated: true,
+    updateOnly: true,
   })
   id?: number;
 
   @property({
     type: 'string',
     required: true,
+    index: {
+      unique: true,
+    },
   })
-  username: string;
+  email: string;
 
   @property({
     type: 'string',
@@ -25,21 +31,21 @@ export class User extends Entity {
     type: 'string',
     required: true,
   })
-  email: string;
-
-  @property({
-    type: 'string',
-  })
-  address?: string;
+  firstName: string;
 
   @property({
     type: 'string',
   })
   lastName?: string;
 
+  @property({
+    type: 'string',
+  })
+  adress?: string;
 
   constructor(data?: Partial<User>) {
     super(data);
+    Object.assign(this, data);
   }
 }
 
