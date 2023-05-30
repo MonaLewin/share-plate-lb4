@@ -4,7 +4,7 @@ import {juggler} from '@loopback/repository';
 const config = {
   name: 'datasource',
   connector: 'postgresql',
-  url: 'postgres://share_plate_db_user:U9KLlUMX8pFDmJkNevm67rTLh5zYNWB0@dpg-chqvout269vcgs04vjt0-a.frankfurt-postgres.render.com/share_plate_db:5432/share-plate-db?ssl=true',
+  url: 'postgres://share_plate_db_user:U9KLlUMX8pFDmJkNevm67rTLh5zYNWB0@dpg-chqvout269vcgs04vjt0-a.frankfurt-postgres.render.com:5432/share_plate_db?ssl=true',
 };
 
 // Observe application's life cycle to disconnect the datasource when
