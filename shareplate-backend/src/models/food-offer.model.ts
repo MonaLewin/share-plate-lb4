@@ -1,24 +1,6 @@
 import {Entity, model, property} from '@loopback/repository';
 
-@model({
-  /*
-  settings: {
-    foreignKeys: {
-      fkUserUserid: {
-        name: 'fkUserUserid',
-        entity: 'User',
-        entityKey: 'id',
-        foreignKey: 'createdBy',
-        onDelete: 'CASCADE',
-        onUpdate: 'SET NULL'
-      },
-    },
-  },
-  */
-  datasource: 'db'
-
-
-})
+@model()
 export class FoodOffer extends Entity {
   @property({
     type: 'number',
@@ -42,7 +24,7 @@ export class FoodOffer extends Entity {
     type: 'any',
     required: true,
   })
-  image: never;
+  image: any;
 
   @property({
     type: 'string',
@@ -60,18 +42,7 @@ export class FoodOffer extends Entity {
     type: 'boolean',
     required: true,
   })
-  reserved: boolean;
-
-  @property({
-    type: 'boolean',
-    required: true,
-  })
   pickedUp: boolean;
-
-  @property({
-    type: 'number',
-  })
-  createdBy: number;
 
 
   constructor(data?: Partial<FoodOffer>) {

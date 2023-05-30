@@ -1,8 +1,6 @@
 import {Entity, model, property} from '@loopback/repository';
 
-@model({
-  datasource: 'db'
-})
+@model()
 export class Reservation extends Entity {
   @property({
     type: 'number',
@@ -28,11 +26,6 @@ export class Reservation extends Entity {
   })
   accepted: boolean;
 
-  @property({
-    type: 'number',
-    required: true,
-  })
-  reservedBy: number;
 
   constructor(data?: Partial<Reservation>) {
     super(data);
