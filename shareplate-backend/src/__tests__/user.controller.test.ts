@@ -14,7 +14,6 @@ import {
 import {ShareplateBackendApplication} from '../application';
 import {UserProfile} from '@loopback/security';
 import {User} from '../models';
-import {Response} from '@loopback/rest';
 import {before} from 'mocha';
 
 const chai = require('chai');
@@ -61,16 +60,7 @@ describe('UserController', () => {
   });
 
   describe('signup()', () => {
-    let mockResponse: Response;
-
-    before(() => {
-      mockResponse = {
-        status: sinon.stub().returnsThis(),
-        json: sinon.stub(),
-      } as unknown as Response<Response>;
-    });
-
-    it('should return 201 if signup was successful', async () => {
+    it('should return created User instance if signup was successful', async () => {
       // Arrange
       const newUser: User = new User({
         email: 'test@example.com',
@@ -84,10 +74,10 @@ describe('UserController', () => {
       createStub.resolves(newUser);
 
       // Act
-      await userController.signUp(newUser, mockResponse);
+      const response = await userController.signUp(newUser);
 
       // Assert
-      expect(mockResponse.status).to.have.been.calledWith(201);
+      expect(response.email).to.equal('test@example.com');
     });
   });
 });

@@ -2,8 +2,8 @@ import {post, requestBody} from '@loopback/rest';
 import {repository} from '@loopback/repository';
 import {inject} from '@loopback/core';
 import {
-  DeviceTokenRepository,
   NotificationRequestRepository,
+    UserRepository,
 } from '../repositories';
 import apn from 'apn';
 import {NotificationRequest} from '../models';
@@ -12,8 +12,8 @@ export class PushNotificationController {
   constructor(
     @repository(NotificationRequestRepository)
     public notificationRequestRepository: NotificationRequestRepository,
-    @repository(DeviceTokenRepository)
-    public deviceTokenRepository: DeviceTokenRepository,
+    @repository(UserRepository)
+    public userRepository: UserRepository,
     @inject('apn.provider') private apnProvider: apn.Provider,
   ) {}
 
@@ -31,12 +31,11 @@ export class PushNotificationController {
           body: requestData.notification.body,
         },
       });
-      const deviceToken = await this.deviceTokenRepository.findById(
-        requestData.notification.id,
-      );
+      const deviceToken = await this.userRepository.findDeviceTokenById(1)
+      if (deviceToken == null) return
       const result = await this.apnProvider.send(
         notification,
-        deviceToken.deviceToken,
+        deviceToken,
       );
       console.log('Push notification sent:', result, '\n', result.failed);
     } catch (error) {

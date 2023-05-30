@@ -26,6 +26,15 @@ export class Reservation extends Entity {
   })
   accepted: boolean;
 
+  @property({
+    type: 'number',
+  })
+  reservedBy?: number;
+
+  @property({
+    type: 'number',
+  })
+  foodOfferId?: number;
 
   constructor(data?: Partial<Reservation>) {
     super(data);

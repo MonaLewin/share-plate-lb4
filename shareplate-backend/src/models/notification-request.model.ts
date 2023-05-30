@@ -2,9 +2,7 @@ import {Entity, model, property} from '@loopback/repository';
 
 //import {DeviceToken} from "./device-token.model";
 
-@model({
-  datasource: 'db'
-})
+@model()
 export class NotificationRequest extends Entity {
   @property({
     type: 'number',
@@ -24,13 +22,6 @@ export class NotificationRequest extends Entity {
   })
   body: string;
 
-  /*
-  @property({
-      type: 'DeviceToken',
-      required: true,
-  })
-  deviceToken: DeviceToken
-   */
   constructor(data?: Partial<NotificationRequest>) {
     super(data);
   }

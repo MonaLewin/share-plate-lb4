@@ -1,4 +1,5 @@
-import {Entity, model, property} from '@loopback/repository';
+import {Entity, model, property, hasOne} from '@loopback/repository';
+import {Reservation} from './reservation.model';
 
 @model()
 export class FoodOffer extends Entity {
@@ -24,7 +25,7 @@ export class FoodOffer extends Entity {
     type: 'any',
     required: true,
   })
-  image: any;
+  image: never;
 
   @property({
     type: 'string',
@@ -42,8 +43,21 @@ export class FoodOffer extends Entity {
     type: 'boolean',
     required: true,
   })
+  reserved: boolean;
+
+  @property({
+    type: 'boolean',
+    required: true,
+  })
   pickedUp: boolean;
 
+  @property({
+    type: 'number',
+  })
+  createdBy?: number;
+
+  @hasOne(() => Reservation)
+  reservation: Reservation;
 
   constructor(data?: Partial<FoodOffer>) {
     super(data);

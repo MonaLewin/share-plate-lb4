@@ -1,12 +1,12 @@
-import {repository} from '@loopback/repository';
+import {Filter, repository} from '@loopback/repository';
 import {
   get,
   getModelSchemaRef,
   HttpErrors,
+  param,
   post,
   requestBody,
-  Response,
-  RestBindings,
+  response,
   SchemaObject,
 } from '@loopback/rest';
 import {inject} from '@loopback/core';
@@ -20,7 +20,7 @@ import {authenticate, TokenService} from '@loopback/authentication';
 import {SecurityBindings, securityId, UserProfile} from '@loopback/security';
 import {genSalt, hash} from 'bcryptjs';
 
-import {User} from '../models';
+import {FoodOffer, Reservation, User} from '../models';
 import {UserRepository} from '../repositories';
 
 const CredentialsSchema: SchemaObject = {
@@ -94,8 +94,8 @@ export class UserController {
   }
 
   /**
-   * Mainly just a test method. Requires a valid JWT in the auth header and
-   * returns the id of the user, if JWT is valid.
+   * Requires a valid JWT in the auth header and returns the id of the user,
+   * if JWT is valid.
    */
   @authenticate('jwt')
   @get('/whoAmI', {
@@ -122,23 +122,15 @@ export class UserController {
    * /signup is used to create new user accounts
    * @param newUserRequest the user object containing all necessary information
    * about the user
-   * @param response 201 if successful, 422 if email is already in use
+   * @param signUpResponse 201 if successful, 422 if email is already in use
    */
-  @post('/signup', {
+  @post('users/signup', {
     responses: {
-      '201': {
-        description: 'User registration successful',
+      '200': {
+        description: 'User model instance',
         content: {
           'application/json': {
-            schema: {
-              type: 'object',
-              properties: {
-                message: {
-                  type: 'string',
-                  description: 'Success message',
-                },
-              },
-            },
+            schema: getModelSchemaRef(User, {partial: true}),
           },
         },
       },
@@ -158,8 +150,7 @@ export class UserController {
       },
     })
     newUserRequest: User,
-    @inject(RestBindings.Http.RESPONSE) response: Response,
-  ): Promise<void> {
+  ): Promise<User> {
     // check if email is already in use, and return 422 if it is.
     const existingUser = await this.userRepository.count({
       email: newUserRequest.email,
@@ -172,8 +163,87 @@ export class UserController {
     const password = await hash(newUserRequest.password, await genSalt());
     const newUser = newUserRequest;
     newUser.password = password;
-    await this.userRepository.create(newUser);
-
-    response.status(201).json({message: 'User registration successful'});
+    return this.userRepository.create(newUser);
   }
+
+  @authenticate('jwt')
+  @get('/users/{id}', {
+    responses: {
+      '200': {
+        description: 'User model instance',
+        content: {
+          'application/json': {
+            schema: getModelSchemaRef(User, {partial: true}),
+          },
+        },
+      },
+    },
+  })
+  async findUserById(@param.path.number('id') id: number): Promise<User> {
+    return this.userRepository.findById(id);
+  }
+
+  @authenticate('jwt')
+  @get('/users/{id}/food-offers', {
+    responses: {
+      '200': {
+        description: 'Array of User has many FoodOffer',
+        content: {
+          'application/json': {
+            schema: {type: 'array', items: getModelSchemaRef(FoodOffer)},
+          },
+        },
+      },
+    },
+  })
+  async findFoodOffersById(
+    @param.path.number('id') id: number,
+    @param.query.object('filter') filter?: Filter<FoodOffer>,
+  ): Promise<FoodOffer[]> {
+    return this.userRepository.foodOffers(id).find(filter);
+  }
+
+  @authenticate('jwt')
+  @get('/users/{id}/reservations', {
+    responses: {
+      '200': {
+        description: 'Array of User has many Reservation',
+        content: {
+          'application/json': {
+            schema: {type: 'array', items: getModelSchemaRef(Reservation)},
+          },
+        },
+      },
+    },
+  })
+  async findReservationsById(
+    @param.path.number('id') id: number,
+    @param.query.object('filter') filter?: Filter<Reservation>,
+  ): Promise<Reservation[]> {
+    return this.userRepository.reservations(id).find(filter);
+  }
+
+  @get('/user-first-name/{id}')
+  @response(200, {
+    description: 'User first name',
+    content: {
+      'application/json': {
+        schema: {
+          type: 'object',
+          properties: {
+            firstName: {
+              type: 'string',
+            },
+          },
+        },
+      },
+    },
+  })
+  async findFirstNameById(
+      @param.path.number('id') id: number,
+  ): Promise<{firstName: string}> {
+    const user = await this.userRepository.findById(id, {fields: {firstName: true}});
+    return {firstName: user.firstName};
+  }
+
 }

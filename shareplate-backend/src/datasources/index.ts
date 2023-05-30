@@ -1,1 +1,1 @@
-export * from './datasource.datasource';
+export * from './db.datasource';

@@ -1,7 +1,11 @@
-import {Entity, model, property} from '@loopback/repository';
+import {Entity, hasMany, model, property} from '@loopback/repository';
+import {FoodOffer} from './food-offer.model';
+import {Reservation} from './reservation.model';
 
 @model({
-  datasource: 'db'
+  settings: {
+    hiddenProperties: ['password'],
+  },
 })
 export class User extends Entity {
   @property({
@@ -41,7 +45,18 @@ export class User extends Entity {
   @property({
     type: 'string',
   })
-  adress?: string;
+  address?: string;
+
+  @hasMany(() => FoodOffer, {keyTo: 'createdBy'})
+  foodOffers: FoodOffer[];
+
+  @hasMany(() => Reservation, {keyTo: 'reservedBy'})
+  reservations: Reservation[];
+
+  @property({
+    type: 'string',
+  })
+  deviceToken: string;
 
   constructor(data?: Partial<User>) {
     super(data);
