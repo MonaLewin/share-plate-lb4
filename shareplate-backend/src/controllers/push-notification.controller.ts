@@ -30,6 +30,9 @@ export class PushNotificationController {
     //id: used to get device token from db
     @requestBody() requestData: {notification: NotificationRequest},
   ): Promise<void> {
+      console.log("before sending notification..");
+      console.log("title is ", requestData.notification.title);
+      console.log("body is ", requestData.notification.body);
     try {
       const notification = new apn.Notification({
         topic: 'nl.fontys.prj423.group2',
