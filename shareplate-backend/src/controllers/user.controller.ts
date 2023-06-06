@@ -95,7 +95,39 @@ export class UserController {
     return {token};
   }
 
-  /**
+@post('/users/update-token/{userId}')
+@response(200, {
+  description: 'Update device token for user',
+})
+async updateToken(
+    @param.path.number('userId') userId: number,
+@requestBody({
+  content: {
+    'application/json': {
+      schema: {
+        type: 'object',
+        properties: {
+          deviceToken: { type: 'string' },
+        },
+        required: ['deviceToken'],
+      },
+    },
+  },
+})
+tokenData: { deviceToken: string },
+): Promise<void> {
+  const user = await this.userRepository.findById(userId);
+  if (!user) {
+  throw new HttpErrors.NotFound('User not found');
+}
+//Update device token of user
+user.deviceToken = tokenData.deviceToken;
+await this.userRepository.update(user);
+return;
+}
+
+
+/**
    * Requires a valid JWT in the auth header and returns the id of the user,
    * if JWT is valid.
    */
