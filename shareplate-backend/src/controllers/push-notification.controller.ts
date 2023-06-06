@@ -30,10 +30,6 @@ export class PushNotificationController {
     //id: used to get device token from db
     @requestBody() requestData: {notification: NotificationRequest},
   ): Promise<void> {
-      console.log("before sending notification..");
-      console.log("is present ", requestData);
-      console.log("title is ", requestData.notification.title);
-      console.log("body is ", requestData.notification.body);
     try {
       const notification = new apn.Notification({
         topic: 'nl.fontys.prj423.group2',
@@ -42,13 +38,10 @@ export class PushNotificationController {
           body: requestData.notification.body,
         },
       });
-  console.log("after creating apn notification")
       const foodOffer = await this.foodOfferController.findById(requestData.notification.id);
       if(foodOffer.createdBy == null) return
-      console.log("after retreiving food offer user id is: ", foodOffer.createdBy);
       const deviceToken = await this.userRepository.findDeviceTokenById(foodOffer.createdBy)
       if (deviceToken == null) return
-      console.log("after retreiving device token: ", deviceToken);
       const result = await this.apnProvider.send(
         notification,
         deviceToken,
