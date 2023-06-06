@@ -116,10 +116,12 @@ async updateToken(
 })
 tokenData: { deviceToken: string },
 ): Promise<void> {
+    console.log("updating token..");
   const user = await this.userRepository.findById(userId);
   if (!user) {
   throw new HttpErrors.NotFound('User not found');
 }
+  console.log("user found.. updating to ", tokenData.deviceToken);
 //Update device token of user
 user.deviceToken = tokenData.deviceToken;
 await this.userRepository.update(user);
