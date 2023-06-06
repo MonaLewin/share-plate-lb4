@@ -31,6 +31,7 @@ export class PushNotificationController {
     @requestBody() requestData: {notification: NotificationRequest},
   ): Promise<void> {
       console.log("before sending notification..");
+      console.log("is present ", requestData);
       console.log("title is ", requestData.notification.title);
       console.log("body is ", requestData.notification.body);
     try {
