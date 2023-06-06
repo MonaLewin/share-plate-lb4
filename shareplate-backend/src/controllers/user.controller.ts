@@ -85,7 +85,6 @@ export class UserController {
     if (!user) {
       throw new HttpErrors.Unauthorized('Invalid email or password');
     }
-    user.deviceToken = credentials.deviceToken;
     // convert a User object into a UserProfile object (reduced set of properties)
     const userProfile = this.userRepository.convertToUserProfile(user);
 
