@@ -30,8 +30,6 @@ export class PushNotificationController {
     //id: used to get device token from db
     @requestBody() requestData: {notification: NotificationRequest},
   ): Promise<void> {
-    console.log("title is: ");
-    console.log(requestData.notification.title);
     try {
       const notification = new apn.Notification({
         topic: 'nl.fontys.prj423.group2',
@@ -40,15 +38,18 @@ export class PushNotificationController {
           body: requestData.notification.body,
         },
       });
-
+  console.log("after creating apn notification")
       const foodOffer = await this.foodOfferController.findById(requestData.notification.id);
       if(foodOffer.createdBy == null) return
+      console.log("after retreiving food offer user id is: ", foodOffer.createdBy);
       const deviceToken = await this.userRepository.findDeviceTokenById(foodOffer.createdBy)
       if (deviceToken == null) return
-      await this.apnProvider.send(
+      console.log("after retreiving device token: ", deviceToken);
+      const result = await this.apnProvider.send(
         notification,
         deviceToken,
       );
+      console.log('Push notification sent:', result, '\n', result.failed);
     } catch (error) {
       console.error('Failed to send push notification: ', error);
     }
