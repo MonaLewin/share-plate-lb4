@@ -2,20 +2,27 @@ import {post, requestBody} from '@loopback/rest';
 import {repository} from '@loopback/repository';
 import {inject} from '@loopback/core';
 import {
+  FoodOfferRepository,
   NotificationRequestRepository,
-    UserRepository,
+  UserRepository,
 } from '../repositories';
 import apn from 'apn';
 import {NotificationRequest} from '../models';
+import {FoodOfferController} from "./food-offer.controller";
 
 export class PushNotificationController {
+  private foodOfferController: FoodOfferController;
   constructor(
     @repository(NotificationRequestRepository)
     public notificationRequestRepository: NotificationRequestRepository,
     @repository(UserRepository)
     public userRepository: UserRepository,
+    @repository(FoodOfferRepository)
+    public foodOfferRepository: FoodOfferRepository,
     @inject('apn.provider') private apnProvider: apn.Provider,
-  ) {}
+  ) {
+    this.foodOfferController = new FoodOfferController(this.foodOfferRepository);
+  }
 
   @post('/send-push-notification')
   async sendPushNotification(
@@ -31,13 +38,15 @@ export class PushNotificationController {
           body: requestData.notification.body,
         },
       });
-      const deviceToken = await this.userRepository.findDeviceTokenById(1)
+
+      const foodOffer = await this.foodOfferController.findById(requestData.notification.id);
+      if(foodOffer.createdBy == null) return
+      const deviceToken = await this.userRepository.findDeviceTokenById(foodOffer.createdBy)
       if (deviceToken == null) return
-      const result = await this.apnProvider.send(
+      await this.apnProvider.send(
         notification,
         deviceToken,
       );
-      console.log('Push notification sent:', result, '\n', result.failed);
     } catch (error) {
       console.error('Failed to send push notification: ', error);
     }
