@@ -85,7 +85,9 @@ export class UserController {
     if (!user) {
       throw new HttpErrors.Unauthorized('Invalid email or password');
     }
+    // update user for new device token
     user.deviceToken = credentials.deviceToken;
+    await this.userRepository.update(user);
     // convert a User object into a UserProfile object (reduced set of properties)
     const userProfile = this.userRepository.convertToUserProfile(user);
 
@@ -262,36 +264,6 @@ export class UserController {
   ): Promise<{firstName: string}> {
     const user = await this.userRepository.findById(id, {fields: {firstName: true}});
     return {firstName: user.firstName};
-  }
-
-  @post('/users/update-token/{userId')
-  @response(200, {
-    description: 'Update device token for user',
-  })
-  async updateToken(
-      @param.path.number('userId') userId: number,
-      @requestBody({
-        content: {
-          'application/json': {
-            schema: {
-              type: 'object',
-              properties: {
-                deviceToken: { type: 'string'},
-              },
-              required: ['deviceToken'],
-            },
-          },
-        },
-      })
-      tokenData: {deviceToken: string },
-  ): Promise<void> {
-    const user = await this.userRepository.findById(userId);
-    if(!user) {
-      throw new HttpErrors.NotFound("User not found");
-    }
-    user.deviceToken = tokenData.deviceToken;
-    await  this.userRepository.update(user);
-    return;
   }
 
 }
