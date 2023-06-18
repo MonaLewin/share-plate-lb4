@@ -24,6 +24,7 @@ export class NotificationRequest extends Entity {
 
   constructor(data?: Partial<NotificationRequest>) {
     super(data);
+    Object.assign(this, data);
   }
 }
 

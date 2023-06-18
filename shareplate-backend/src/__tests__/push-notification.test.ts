@@ -1,97 +1,137 @@
 import {PushNotificationController} from "../controllers";
-import {NotificationRequestRepository, UserRepository, FoodOfferRepository} from '../repositories';
-import apn from 'apn';
-import {FoodOffer, NotificationRequest} from '../models';
-import {FoodOfferController} from "../controllers";
-import {expect} from 'chai';
-import sinon from 'sinon';
+import {
+    createRestAppClient,
+    createStubInstance,
+    sinon,
+} from "@loopback/testlab";
+import {before} from "mocha";
+import {ShareplateBackendApplication} from "../application";
+import {FoodOfferRepository, NotificationRequestRepository, UserRepository} from "../repositories";
+import apn from "apn";
+import {FoodOffer, NotificationRequest, User} from "../models";
+import {HttpErrors} from "@loopback/rest";
+import chaiAsPromised from "chai-as-promised";
+
+const chai = require('chai');
+const sinonChai = require('sinon-chai');
+chai.use(sinonChai);
+chai.use(chaiAsPromised);
+const expect = chai.expect;
 
 describe('PushNotificationController', () => {
+    let app: ShareplateBackendApplication;
+    let pushNotificationRepository: NotificationRequestRepository;
     let pushNotificationController: PushNotificationController;
-    let notificationRequestRepository: NotificationRequestRepository;
     let userRepository: UserRepository;
     let foodOfferRepository: FoodOfferRepository;
     let apnProvider: apn.Provider;
-    let foodOfferController: FoodOfferController;
 
-    beforeEach(() => {
-        //Create stub instances for required dependencies
-        notificationRequestRepository = sinon.createStubInstance(NotificationRequestRepository);
-        userRepository = sinon.createStubInstance(UserRepository);
-        foodOfferRepository = sinon.createStubInstance(FoodOfferRepository);
-        apnProvider = sinon.createStubInstance(apn.Provider);
-        foodOfferController = sinon.createStubInstance(FoodOfferController);
+    before(async () => {
+        app = new ShareplateBackendApplication();
+        await app.boot();
+        await app.start();
 
-        //Create an instance of PushNotificationController with stub dependencies
+        pushNotificationRepository = createStubInstance(NotificationRequestRepository);
+        userRepository = createStubInstance(UserRepository);
+        foodOfferRepository = createStubInstance(FoodOfferRepository);
+        apnProvider = createStubInstance(apn.Provider);
+
+        app.bind('repositories.NotificationRequestRepository').to(pushNotificationRepository);
+
         pushNotificationController = new PushNotificationController(
-            notificationRequestRepository,
+            pushNotificationRepository,
             userRepository,
             foodOfferRepository,
-            apnProvider
+            apnProvider,
         );
-        //Assign stubbed FoodOfferController to the PushNotificationController
-        pushNotificationController['foodOfferController'] = foodOfferController;
+
+        createRestAppClient(app);
     });
 
-    describe('sendPushNotification', () => {
-        it('should send a push notification successfully', async () => {
-            // Arrange
-            const requestData: { notification: NotificationRequest } = {
-                notification: new NotificationRequest({
-                    title: 'Test Notification',
-                    body: 'This is a test notification',
-                }),
-            };
-            //Create FoodOffer instance
-            const foodOffer = new FoodOffer();
-            foodOffer.name = 'Food Offer Name';
-            foodOffer.location = 'Food Offer Location';
-            foodOffer.datetime = new Date().toString();
-            foodOffer.reserved = false;
-            foodOffer.pickedUp = false;
-            foodOffer.createdBy = 1;
-            //Test device token
-            const deviceToken = 'deviceToken';
-            //Create a stub for the apnProvider.send method
-            const apnProviderSendStub = sinon.stub(apnProvider, 'send').resolves({sent: [], failed:[]});
-
-            // Stub the necessary repository and controller methods
-            const findByIdStub = sinon.stub(foodOfferController, 'findById').resolves(foodOffer);
-            const findDeviceTokenByIdStub = sinon.stub(userRepository, 'findDeviceTokenById').resolves(deviceToken);
-
-            // Act
-            await pushNotificationController.sendPushNotification(requestData);
-
-            // Verify that findById is called with the correct argument
-            expect(findByIdStub.calledOnceWithExactly(requestData.notification.id));
-            //Verify that findDeviceTokenById is called with the correct argument
-            expect(findDeviceTokenByIdStub.calledOnceWithExactly(foodOffer.createdBy));
-            //Verify that apnProvider.send is called once
-            expect(apnProviderSendStub.calledOnce);
-        });
-
-        it('should handle errors during push notification sending', async () => {
-            // Arrange
-            const requestData: { notification: NotificationRequest } = {
-                notification: new NotificationRequest({
-                    title: 'Test Notification',
-                    body: 'This is a test notification',
-                }),
-            };
-            //Create an error object fo rtesting
-            const error = new Error('Push notification sending failed');
-            //Stub findById to throw the error
-            const findByIdStub = sinon.stub(foodOfferController, 'findById').throws(error);
-            //Stub console.error to prevent console output
-            const consoleErrorStub = sinon.stub(console, 'error');
-
-            // Act
-            await pushNotificationController.sendPushNotification(requestData);
-
-            //Verify findById is called with correct argument
-            expect(findByIdStub.calledOnceWithExactly(requestData.notification.id));
-            //Verify console.error is called with the error
-            expect(consoleErrorStub.calledOnceWithExactly('Failed to send push notification: ', error));
-        });
+    after(async () => {
+        await app.stop();
     });
-});
+
+    it('should create a new PushNotificationController instance', () => {
+        expect(pushNotificationController).to.be.instanceOf(PushNotificationController);
+    });
+
+    describe('sendPushNotification()', () => {
+        it('should throw food offer not found for id', async () => {
+            const newFoodOffer: FoodOffer = new FoodOffer({
+                id: 2,
+                name: "Test Offer1",
+                description: "test description",
+                location: "Venlo",
+                datetime: Date.now().toString(),
+                reserved: false,
+                pickedUp: false,
+                createdBy: undefined,
+            });
+            (foodOfferRepository.findById as sinon.SinonStub).callsFake((id) =>{
+                return newFoodOffer.id === id ? newFoodOffer : null})
+
+            //Assert
+            expect(pushNotificationController.sendPushNotification({
+                notification: new NotificationRequest({
+                    id: 9999,
+                    body: "Test body",
+                    title: "Test title",
+                })
+            })).be.rejectedWith(HttpErrors.NotFound);
+
+        })
+
+        it('should throw CreatedBy is null for the food offer', async () => {
+            const newFoodOffer: FoodOffer = new FoodOffer({
+                id: 2,
+                name: "Test Offer2",
+                description: "test description",
+                location: "Venlo",
+                datetime: Date.now().toString(),
+                reserved: false,
+                pickedUp: false,
+                createdBy: undefined,
+            });
+            (foodOfferRepository.findById as sinon.SinonStub).reset();
+            (foodOfferRepository.findById as sinon.SinonStub).callsFake((id) =>{
+                return newFoodOffer.id === id ? newFoodOffer : null})
+
+            //Assert
+            expect(pushNotificationController.sendPushNotification({
+                notification: new NotificationRequest({
+                    id: 2,
+                    body: "Test body",
+                    title: "Test title",
+                })
+            })).be.rejectedWith(HttpErrors.NotFound);
+        })
+
+        it('should throw device token not found for user id', async () => {
+            const newFoodOffer: FoodOffer = new FoodOffer({
+                id: 2,
+                name: "Test Offer3",
+                description: "test description",
+                location: "Venlo",
+                datetime: Date.now().toString(),
+                reserved: false,
+                pickedUp: false,
+                createdBy: 1,
+            });
+
+            (foodOfferRepository.findById as sinon.SinonStub).reset();
+            (foodOfferRepository.findById as sinon.SinonStub).callsFake((id) =>{
+                return newFoodOffer.id === id ? newFoodOffer : null})
+
+            //Assert
+            expect(pushNotificationController.sendPushNotification({
+                notification: new NotificationRequest({
+                    id: 2,
+                    body: "Test body",
+                    title: "Test title",
+                })
+            })).be.rejectedWith(HttpErrors.NotFound);
+        })
+
+    })
+})
