@@ -100,7 +100,9 @@ export class UserController {
   description: 'Update device token for user',
 })
 async updateToken(
+    //The user ID is extracted from the path parameter
     @param.path.number('userId') userId: number,
+//The request body should contain the new device token
 @requestBody({
   content: {
     'application/json': {
@@ -114,14 +116,18 @@ async updateToken(
     },
   },
 })
+//The new device token is extracted from the request body
 tokenData: { deviceToken: string },
 ): Promise<void> {
+    //Find the user by their ID
   const user = await this.userRepository.findById(userId);
   if (!user) {
+    //Throws an error when there is no user with the provided ID
   throw new HttpErrors.NotFound('User not found');
 }
-//Update device token of user
+//Update the device token of the user
 user.deviceToken = tokenData.deviceToken;
+  //Save the updated user in the repository
 await this.userRepository.update(user);
 return;
 }

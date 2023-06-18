@@ -21,27 +21,34 @@ export class PushNotificationController {
     public foodOfferRepository: FoodOfferRepository,
     @inject('apn.provider') private apnProvider: apn.Provider,
   ) {
+    //Create an instance of FoodOfferController to access its methods
     this.foodOfferController = new FoodOfferController(this.foodOfferRepository);
   }
 
   @post('/send-push-notification')
   async sendPushNotification(
-    //notification: contains payload of the push notification
-    //id: used to get device token from db
+      //Request body contains the payload of the push notification
+      // And it should have a 'notification' property of type NotificationRequest
     @requestBody() requestData: {notification: NotificationRequest},
   ): Promise<void> {
     try {
+      //Create a new APN notification with the provided title and body
       const notification = new apn.Notification({
+        //Indicates from which application this notification is coming from
         topic: 'nl.fontys.prj423.group2',
         alert: {
           title: requestData.notification.title,
           body: requestData.notification.body,
         },
       });
+      //Find the corresponding food offer based on the notification ID
+      // The ID is the id of the user who should recieve the notifcation
       const foodOffer = await this.foodOfferController.findById(requestData.notification.id);
       if(foodOffer.createdBy == null) return
+      //Retrieve device token of the user who should recieve the notification
       const deviceToken = await this.userRepository.findDeviceTokenById(foodOffer.createdBy)
       if (deviceToken == null) return
+      //Send the APN notification to the device token using the APN provider
       const result = await this.apnProvider.send(
         notification,
         deviceToken,
