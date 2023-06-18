@@ -44,10 +44,17 @@ export class PushNotificationController {
       //Find the corresponding food offer based on the notification ID
       // The ID is the id of the user who should recieve the notifcation
       const foodOffer = await this.foodOfferController.findById(requestData.notification.id);
-      if(foodOffer.createdBy == null) return
+      if(foodOffer.createdBy == null) {
+        throw new Error('Food offer not found for ID: $(requestData.notification.id}')
+      }
+      if(foodOffer.createdBy == null) {
+        throw new Error('CreatedBy is null for the food offer.')
+      }
       //Retrieve device token of the user who should recieve the notification
       const deviceToken = await this.userRepository.findDeviceTokenById(foodOffer.createdBy)
-      if (deviceToken == null) return
+      if (deviceToken == null) {
+        throw new Error('Devie token not found for user ID: $(foodOffer.createdBy}')
+      }
       //Send the APN notification to the device token using the APN provider
       const result = await this.apnProvider.send(
         notification,
